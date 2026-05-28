@@ -50,14 +50,15 @@ export function StatusBar() {
   const cables = useRackStore((s) => s.cables);
   const activeCableStart = useRackStore((s) => s.activeCableStart);
   const hoveredPort = useRackStore((s) => s.hoveredPort);
+  const hoveredCableId = useRackStore((s) => s.hoveredCableId);
   const selectedDeviceId = useRackStore((s) => s.selectedDeviceId);
   const selectedCableId = useRackStore((s) => s.selectedCableId);
 
   const source = endpointInfo(activeCableStart, installed);
   const hovered = endpointInfo(hoveredPort, installed);
-  const selectedCable = cables.find((c) => c.id === selectedCableId);
-  const cableSrc = selectedCable && endpointInfo(selectedCable.from, installed);
-  const cableDst = selectedCable && endpointInfo(selectedCable.to, installed);
+  const focusedCable = cables.find((c) => c.id === (selectedCableId ?? hoveredCableId));
+  const cableSrc = focusedCable && endpointInfo(focusedCable.from, installed);
+  const cableDst = focusedCable && endpointInfo(focusedCable.to, installed);
   const selectedInstance = installed.find((i) => i.instanceId === selectedDeviceId);
   const selectedDevice = selectedInstance && getDeviceById(devices, selectedInstance.deviceId);
 
@@ -93,7 +94,7 @@ export function StatusBar() {
               {protocolMeta(hovered.port.protocol).label} {hovered.port.direction.toUpperCase()}
             </span>
           </>
-        ) : selectedCable && cableSrc && cableDst ? (
+        ) : focusedCable && cableSrc && cableDst ? (
           <>
             <span style={{ color: protocolMeta(cableSrc.port.protocol).color }}>━━</span>
             <span className="text-copy">{cableSrc.deviceName}</span>

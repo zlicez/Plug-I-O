@@ -1,14 +1,13 @@
-import * as Tooltip from '@radix-ui/react-tooltip';
 import { motion } from 'framer-motion';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { devices } from '../../../data/devices';
 import { validateConnection } from '../../../entities/cable/lib/validation';
 import { endpointKey } from '../../../entities/cable/lib/endpoint-key';
 import type { CableEndpoint } from '../../../entities/cable/model/types';
 import { getDeviceById } from '../../../entities/device/lib/device-utils';
-import { PortGlyph, portColor } from '../../../entities/device/ui/PortGlyph';
+import { PortGlyph } from '../../../shared/audio/PortGlyph';
+import { protocolMeta, resolveProtocolKey } from '../../../shared/audio';
 import { REAR_GEOMETRY, type Point } from '../../../shared/constants/rack-geometry';
-import { cn } from '../../../shared/lib/cn';
 import { useRackStore } from '../../rack/model/use-rack-store';
 import { routeCables } from '../lib/cable-router';
 import { cablePath, layoutPorts, type PortLocation } from '../lib/port-geometry';
@@ -22,16 +21,32 @@ const NAME_FONT = 11;
 const LABEL_OFFSET = 14;
 const ROTATE_THRESHOLD = 42;
 
+type PortState = 'idle' | 'compatible' | 'invalid' | 'source';
+
+/**
+ * Rear panel renderer + interactive patchbay.
+ *
+ * Drives the cable-drawing flow from the design canvas spec:
+ *  - click a port → activeCableStart (source)
+ *  - compatible ports get a pulsing accent ring; incompatible ports
+ *    show a red halo
+ *  - click another compatible port to commit; identical port to cancel
+ *  - cable bezier "draws in" via stroke-dashoffset animation
+ *
+ * Color palette is the design-system protocol map — cable.color is set
+ * at creation time by cableColorForPort(port) using the same hex values.
+ */
 export function RearRackSvg({ onPortHover, pointer }: RearRackSvgProps) {
   const installed = useRackStore((state) => state.installed);
   const cables = useRackStore((state) => state.cables);
   const activeCableStart = useRackStore((state) => state.activeCableStart);
   const selectedCableId = useRackStore((state) => state.selectedCableId);
+  const hoveredCableId = useRackStore((state) => state.hoveredCableId);
+  const setHoveredCable = useRackStore((state) => state.setHoveredCable);
   const startCable = useRackStore((state) => state.startCable);
   const completeCable = useRackStore((state) => state.completeCable);
   const selectDevice = useRackStore((state) => state.selectDevice);
   const selectCable = useRackStore((state) => state.selectCable);
-  const [hoveredCableId, setHoveredCableId] = useState<string | null>(null);
 
   const geometry = REAR_GEOMETRY;
   const { PANEL_X, PANEL_WIDTH, UNIT_HEIGHT, RACK_TOP, NAME_STRIP } = geometry;
@@ -55,9 +70,9 @@ export function RearRackSvg({ onPortHover, pointer }: RearRackSvgProps) {
     [locations],
   );
 
-  // Dense compact rows: when sockets are packed closer than the threshold the full
-  // labels collide even rotated. Switch those rows to short trailing-digit labels and
-  // render the original group name once as a header at the leftmost socket.
+  // Dense compact rows: when sockets pack closer than the threshold the
+  // full labels would collide even rotated. Render those rows with only
+  // the trailing digit, plus a single header label on the left.
   const denseRows = useMemo(() => {
     const byRowY = new Map<number, PortLocation[]>();
     locations.forEach((location) => {
@@ -88,24 +103,27 @@ export function RearRackSvg({ onPortHover, pointer }: RearRackSvgProps) {
   );
 
   const start = activeCableStart ? positionMap.get(endpointKey(activeCableStart)) : undefined;
-  const portState = (location: PortLocation): string | undefined => {
-    if (!start) return undefined;
+  const portState = (location: PortLocation): PortState => {
+    if (!start || !activeCableStart) return 'idle';
     if (
-      location.instanceId === activeCableStart?.instanceId &&
+      location.instanceId === activeCableStart.instanceId &&
       location.port.id === activeCableStart.portId
     ) {
-      return 'is-source';
+      return 'source';
     }
-    if (location.instanceId === activeCableStart?.instanceId) return 'is-unavailable';
-    return validateConnection(start.port, location.port).allowed
-      ? 'is-compatible'
-      : 'is-unavailable';
+    if (location.instanceId === activeCableStart.instanceId) return 'invalid';
+    return validateConnection(start.port, location.port).allowed ? 'compatible' : 'invalid';
   };
 
-  const hasHover = hoveredCableId !== null;
+  const hoveredId = hoveredCableId;
+  const pendingProtocol = activeCableStart
+    ? resolveProtocolKey(start?.port.protocol)
+    : undefined;
+  const pendingColor = pendingProtocol ? protocolMeta(start?.port.protocol).hex : undefined;
 
   return (
     <>
+      {/* ────────── Device panels ────────── */}
       {installed.map((instance) => {
         const device = getDeviceById(devices, instance.deviceId);
         if (!device) return null;
@@ -115,15 +133,21 @@ export function RearRackSvg({ onPortHover, pointer }: RearRackSvgProps) {
         return (
           <g key={instance.instanceId} onClick={() => selectDevice(instance.instanceId)}>
             <rect
-              fill="#111418"
+              fill="#101113"
               height={panelHeight}
               rx="3"
-              stroke="#333941"
+              stroke="var(--line-2)"
               width={PANEL_WIDTH}
               x={PANEL_X}
               y={slotTop}
             />
-            <rect fill="#0b0d10" height={NAME_STRIP} width={PANEL_WIDTH} x={PANEL_X} y={slotTop} />
+            <rect
+              fill="#0b0d10"
+              height={NAME_STRIP}
+              width={PANEL_WIDTH}
+              x={PANEL_X}
+              y={slotTop}
+            />
             <rect
               fill={device.frontPanel.colorAccent}
               height="2"
@@ -132,7 +156,7 @@ export function RearRackSvg({ onPortHover, pointer }: RearRackSvgProps) {
               y={slotTop}
             />
             <text
-              fill="#cdd2d8"
+              fill="var(--copy-2)"
               fontFamily="IBM Plex Mono, monospace"
               fontSize={NAME_FONT}
               fontWeight="500"
@@ -142,7 +166,7 @@ export function RearRackSvg({ onPortHover, pointer }: RearRackSvgProps) {
               {nameLabel}
             </text>
             <text
-              fill="#727986"
+              fill="var(--muted-2)"
               fontFamily="IBM Plex Mono, monospace"
               fontSize="9"
               textAnchor="end"
@@ -155,29 +179,45 @@ export function RearRackSvg({ onPortHover, pointer }: RearRackSvgProps) {
         );
       })}
 
+      {/* ────────── Routed cables ────────── */}
       {routedCables.map(({ id, cable, d }) => {
         const warning = cable.notices.some((notice) => notice.level === 'warning');
         const isSelected = selectedCableId === id;
-        const isHovered = hoveredCableId === id;
+        const isHovered = hoveredId === id;
         const isFocused = isSelected || isHovered;
-        let dim = 0.55;
-        if (hasHover && !isHovered) dim = 0.18;
-        else if (isSelected) dim = 1;
+        const hasFocusElsewhere = (hoveredId !== null && hoveredId !== id) || (selectedCableId !== null && selectedCableId !== id);
+        const dim = hasFocusElsewhere ? 0.2 : isFocused ? 1 : 0.85;
+        const stroke = isSelected
+          ? 'var(--accent)'
+          : warning
+            ? 'var(--warning)'
+            : cable.color;
+        const protocolKey = resolveProtocolKey(undefined);
+        void protocolKey;
         const select = () => selectCable(id);
         return (
           <g
-            className={cn('cable-group', isFocused && 'is-focused', warning && 'is-warning')}
             key={id}
             onClick={(event) => {
               event.stopPropagation();
               select();
             }}
-            onPointerEnter={() => setHoveredCableId(id)}
-            onPointerLeave={() => setHoveredCableId((current) => (current === id ? null : current))}
-            style={{ opacity: dim }}
+            onPointerEnter={() => setHoveredCable(id)}
+            onPointerLeave={() => setHoveredCable(null)}
+            style={{ opacity: dim, cursor: 'pointer' }}
           >
+            {/* shadow stroke */}
             <path
-              className="patch-cable-hit"
+              d={d}
+              fill="none"
+              stroke="rgba(0,0,0,0.55)"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={isFocused ? 5 : 4}
+              transform="translate(0, 1.5)"
+            />
+            {/* wide invisible hit target */}
+            <path
               d={d}
               fill="none"
               pointerEvents="stroke"
@@ -186,106 +226,64 @@ export function RearRackSvg({ onPortHover, pointer }: RearRackSvgProps) {
             />
             <motion.path
               animate={{ pathLength: 1 }}
-              className="patch-cable"
               d={d}
               fill="none"
               initial={{ pathLength: 0 }}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  select();
-                }
-              }}
               role="button"
-              stroke={warning ? '#d4820a' : cable.color}
+              stroke={stroke}
               strokeDasharray={warning ? '6 5' : undefined}
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeWidth={isFocused ? 4 : 2.5}
+              strokeWidth={isFocused ? 3.2 : 2.4}
               style={{
                 filter: isFocused
-                  ? `drop-shadow(0 0 6px ${warning ? '#d4820a' : cable.color})`
+                  ? `drop-shadow(0 0 6px ${stroke})`
                   : undefined,
               }}
-              tabIndex={0}
-              transition={{ duration: 0.45, ease: 'easeOut' }}
+              transition={{ duration: 0.24, ease: [0.3, 0, 0, 1] }}
             />
+            {/* endpoint dots */}
           </g>
         );
       })}
 
-      {hoveredCableId &&
-        (() => {
-          const hovered = routedCables.find((entry) => entry.id === hoveredCableId);
-          if (!hovered) return null;
-          const TT_WIDTH = 280;
-          const TT_HEIGHT = 96;
-          const tx = Math.max(
-            8,
-            Math.min(hovered.midpoint.x - TT_WIDTH / 2, geometry.VIEW_WIDTH - TT_WIDTH - 8),
-          );
-          const ty = Math.max(8, hovered.midpoint.y - TT_HEIGHT - 14);
-          const sourceInstance = installed.find(
-            (item) => item.instanceId === hovered.from.instanceId,
-          );
-          const destInstance = installed.find((item) => item.instanceId === hovered.to.instanceId);
-          const sourceName =
-            sourceInstance && getDeviceById(devices, sourceInstance.deviceId)?.name;
-          const destName = destInstance && getDeviceById(devices, destInstance.deviceId)?.name;
-          const protocol = (hovered.from.port.protocol ?? hovered.from.port.type).replaceAll(
-            '_',
-            ' ',
-          );
-          return (
-            <foreignObject
-              height={TT_HEIGHT}
-              style={{ overflow: 'visible', pointerEvents: 'none' }}
-              width={TT_WIDTH}
-              x={tx}
-              y={ty}
-            >
-              <div className="cable-floating-tooltip">
-                <strong>
-                  {sourceName ?? '?'} · {hovered.from.port.label}
-                </strong>
-                <span>
-                  → {destName ?? '?'} · {hovered.to.port.label}
-                </span>
-                <small>{protocol}</small>
-                {hovered.cable.notices.map((notice) => (
-                  <em
-                    className={`cable-tooltip__notice cable-tooltip__notice--${notice.level}`}
-                    key={notice.message}
-                  >
-                    {notice.message}
-                  </em>
-                ))}
-              </div>
-            </foreignObject>
-          );
-        })()}
-
-      {start && pointer && (
-        <motion.path
-          animate={{ pathLength: 1 }}
-          d={cablePath(start, pointer)}
-          fill="none"
-          initial={{ pathLength: 0 }}
-          stroke="#c8ff00"
-          strokeDasharray="4 4"
-          strokeLinecap="round"
-          strokeWidth="2.5"
-        />
+      {/* ────────── Active draw-in-progress cable ────────── */}
+      {start && pointer && pendingColor && (
+        <g pointerEvents="none">
+          <path
+            d={cablePath(start, pointer)}
+            fill="none"
+            stroke="rgba(0,0,0,0.55)"
+            strokeLinecap="round"
+            strokeWidth="4"
+            transform="translate(0, 1.5)"
+          />
+          <motion.path
+            animate={{ pathLength: 1 }}
+            d={cablePath(start, pointer)}
+            fill="none"
+            initial={{ pathLength: 0 }}
+            stroke={pendingColor}
+            strokeDasharray="6 5"
+            strokeLinecap="round"
+            strokeWidth="2.4"
+          />
+        </g>
       )}
 
+      {/* ────────── Ports — interactive ────────── */}
       {locations.map((location) => {
+        const state = portState(location);
         const denseInfo = location.compact ? denseRows.get(location.y) : undefined;
         const labelY = location.y + LABEL_OFFSET;
         const trailing = denseInfo ? location.port.label.match(/(\d+)$/)?.[1] : undefined;
         const label = trailing ?? location.port.label;
+        const glyphState =
+          state === 'compatible' ? 'compatible' : state === 'invalid' ? 'invalid' : 'idle';
+        const isSource = state === 'source';
+
         return (
           <g
-            className={cn('rack-port', portState(location))}
             key={`${location.instanceId}:${location.port.id}`}
             onBlur={() => onPortHover(null)}
             onClick={(event) => {
@@ -308,27 +306,39 @@ export function RearRackSvg({ onPortHover, pointer }: RearRackSvgProps) {
             }
             onMouseLeave={() => onPortHover(null)}
             role="button"
+            style={{ cursor: 'pointer' }}
             tabIndex={0}
           >
-            <title>{`${location.port.label} — ${location.port.direction.toUpperCase()}`}</title>
-            {location.compact ? (
-              <>
-                <circle cx={location.x} cy={location.y} fill="transparent" r="7" />
-                <circle
-                  cx={location.x}
-                  cy={location.y}
-                  fill="#101214"
-                  r="3.4"
-                  stroke={portColor(location.port)}
-                  strokeWidth="1.4"
-                />
-              </>
-            ) : (
-              <PortGlyph port={location.port} x={location.x} y={location.y} />
-            )}
+            {/* No <title> tooltip — design spec routes port info to the status bar */}
+            {isSource ? (
+              <circle
+                cx={location.x}
+                cy={location.y}
+                fill="none"
+                opacity="0.55"
+                r="13"
+                stroke="var(--accent)"
+                strokeWidth="1.4"
+                style={{ animation: 'pulse-ring 1.2s ease-out infinite' }}
+              />
+            ) : null}
+            <foreignObject
+              height={22}
+              style={{ overflow: 'visible' }}
+              width={22}
+              x={location.x - 11}
+              y={location.y - 11}
+            >
+              <PortGlyph
+                kind={location.compact ? undefined : undefined}
+                port={location.port}
+                size={20}
+                state={glyphState}
+              />
+            </foreignObject>
             {location.showLabel && (
               <text
-                fill="#9ca2ad"
+                fill="var(--muted)"
                 fontFamily="IBM Plex Mono, monospace"
                 fontSize={denseInfo ? 8 : geometry.PORT_FONT_SIZE}
                 textAnchor="middle"
@@ -342,9 +352,10 @@ export function RearRackSvg({ onPortHover, pointer }: RearRackSvgProps) {
         );
       })}
 
+      {/* Dense-row group headers */}
       {Array.from(denseRows.entries()).map(([y, info]) => (
         <text
-          fill="#6c727c"
+          fill="var(--muted-2)"
           fontFamily="IBM Plex Mono, monospace"
           fontSize="8"
           fontWeight="500"
@@ -357,27 +368,42 @@ export function RearRackSvg({ onPortHover, pointer }: RearRackSvgProps) {
         </text>
       ))}
 
+      {/* Cable warning markers — render as small accent dots; details go to the status bar */}
       {routedCables.map(({ id, cable, midpoint }) => {
         if (cable.notices.length === 0) return null;
+        const isFocused = selectedCableId === id || hoveredId === id;
         return (
-          <foreignObject
-            height="22"
+          <g
             key={`${id}-notice`}
-            width="22"
-            x={midpoint.x - 11}
-            y={midpoint.y - 11}
+            onClick={(event) => {
+              event.stopPropagation();
+              selectCable(id);
+            }}
+            onPointerEnter={() => setHoveredCable(id)}
+            onPointerLeave={() => setHoveredCable(null)}
+            style={{ cursor: 'pointer' }}
           >
-            <Tooltip.Root>
-              <Tooltip.Trigger asChild>
-                <button aria-label="Cable warning details" className="cable-notice" type="button" />
-              </Tooltip.Trigger>
-              <Tooltip.Portal>
-                <Tooltip.Content className="tooltip" sideOffset={5}>
-                  {cable.notices.map((notice) => notice.message).join(' ')}
-                </Tooltip.Content>
-              </Tooltip.Portal>
-            </Tooltip.Root>
-          </foreignObject>
+            <circle
+              cx={midpoint.x}
+              cy={midpoint.y}
+              fill="var(--warning)"
+              opacity={isFocused ? 1 : 0.85}
+              r="5"
+              stroke="var(--bg)"
+              strokeWidth="1.5"
+            />
+            <text
+              fill="var(--bg)"
+              fontFamily="IBM Plex Mono, monospace"
+              fontSize="7"
+              fontWeight="700"
+              textAnchor="middle"
+              x={midpoint.x}
+              y={midpoint.y + 2.5}
+            >
+              !
+            </text>
+          </g>
         );
       })}
     </>

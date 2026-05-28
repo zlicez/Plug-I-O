@@ -102,6 +102,7 @@ export const useRackStore = create<RackStore>()(
       selectedDeviceId: null,
       selectedCableId: null,
       hoveredPort: null,
+      hoveredCableId: null,
       devicePanelFilter: defaultFilters,
       notifications: [],
       configureRack: (size) =>
@@ -286,6 +287,10 @@ export const useRackStore = create<RackStore>()(
       setHoveredPort: (endpoint) =>
         set((state) => {
           state.hoveredPort = endpoint;
+        }),
+      setHoveredCable: (cableId) =>
+        set((state) => {
+          state.hoveredCableId = cableId;
         }),
       setFilters: (filters) =>
         set((state) => {

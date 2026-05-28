@@ -44,6 +44,7 @@ export interface RackStore {
   selectedDeviceId: string | null;
   selectedCableId: string | null;
   hoveredPort: CableEndpoint | null;
+  hoveredCableId: string | null;
   devicePanelFilter: FilterState;
   notifications: Notification[];
   setRackSize: (size: RackSize) => void;
@@ -61,6 +62,7 @@ export interface RackStore {
   selectDevice: (instanceId: string | null) => void;
   selectCable: (cableId: string | null) => void;
   setHoveredPort: (endpoint: CableEndpoint | null) => void;
+  setHoveredCable: (cableId: string | null) => void;
   setFilters: (filters: Partial<FilterState>) => void;
   notify: (notification: Omit<Notification, 'id'>) => void;
   dismissNotification: (id: string) => void;

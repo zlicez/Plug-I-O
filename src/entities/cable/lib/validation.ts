@@ -113,12 +113,50 @@ export function validateConnection(source: Port, destination: Port): CableValida
   return { allowed: true, notices };
 }
 
+/**
+ * Resolve the canonical hex color for a cable carrying this port's signal.
+ * Mirrors the design-system protocol palette (src/shared/audio/protocols.ts)
+ * so cables drawn on the rear view share visual identity with port glyphs,
+ * inspector dots, and library protocol chips.
+ *
+ * Note: this is a thin re-statement of protocolMeta(port.protocol).hex —
+ * kept inline (rather than imported) so the cable entity has no
+ * dependency on the shared/audio layer (entities cannot depend on shared
+ * domain visuals — only entities, lib, model are allowed).
+ */
 export function cableColorForPort(port: Port): string {
-  if (port.protocol === 'analog' && port.type.startsWith('xlr')) return '#4388ff';
-  if (port.protocol === 'analog') return '#e68a21';
-  if (port.protocol === 'dante' || port.protocol === 'milan_avb') return '#41c984';
-  if (port.protocol === 'ethernet' || port.protocol === 'blu_link') return '#41c984';
-  if (port.protocol === 'midi') return '#a879ff';
-  if (port.protocol === 'power') return '#e7bf45';
-  return '#28c6de';
+  const protocol = port.protocol;
+  if (!protocol) return '#E0A458'; // analog fallback
+  switch (protocol) {
+    case 'analog':
+      return '#E0A458';
+    case 'aes_ebu':
+      return '#6EE7FF';
+    case 'spdif':
+      return '#F2A93B';
+    case 'adat':
+      return '#B58CFF';
+    case 'dante':
+    case 'milan_avb':
+      return '#6366F1';
+    case 'madi':
+      return '#FF7AB6';
+    case 'midi':
+      return '#4ADE80';
+    case 'wordclock':
+      return '#9DA4AF';
+    case 'usb_audio':
+      return '#6EE7FF';
+    case 'ethernet':
+    case 'blu_link':
+      return '#6366F1';
+    case 'pro_tools':
+      return '#B58CFF';
+    case 'control':
+      return '#9DA4AF';
+    case 'power':
+      return '#E05454';
+    default:
+      return '#E0A458';
+  }
 }
