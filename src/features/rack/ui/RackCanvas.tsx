@@ -14,7 +14,6 @@ import {
   type WheelEvent,
 } from 'react';
 import { devices } from '../../../data/devices';
-import type { CableEndpoint } from '../../../entities/cable/model/types';
 import {
   canPlaceDevice,
   getDeviceById,
@@ -30,7 +29,6 @@ import {
 import { cn } from '../../../shared/lib/cn';
 import { Button } from '../../../shared/ui/Button';
 import { RearRackSvg } from '../../patchbay/ui/RearRackSvg';
-import { PatchStatusBar } from '../../patchbay/ui/PatchStatusBar';
 import { useRackStore } from '../model/use-rack-store';
 
 interface DraggedItem {
@@ -178,7 +176,7 @@ export const RackCanvas = forwardRef<HTMLDivElement, RackCanvasProps>(({ dragged
   const installed = useRackStore((state) => state.installed);
   const viewMode = useRackStore((state) => state.viewMode);
   const [pointer, setPointer] = useState<{ x: number; y: number } | null>(null);
-  const [hoveredPort, setHoveredPort] = useState<CableEndpoint | null>(null);
+  const setHoveredPort = useRackStore((state) => state.setHoveredPort);
   const [scale, setScale] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
@@ -372,7 +370,6 @@ export const RackCanvas = forwardRef<HTMLDivElement, RackCanvasProps>(({ dragged
           </motion.div>
         </div>
       </div>
-      <PatchStatusBar hoveredEndpoint={hoveredPort} />
     </div>
   );
 });

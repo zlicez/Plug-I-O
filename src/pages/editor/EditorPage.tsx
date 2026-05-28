@@ -25,6 +25,7 @@ import { useRackStore } from '../../features/rack/model/use-rack-store';
 import { EditorHeader } from '../../features/rack/ui/EditorHeader';
 import { RackCanvas } from '../../features/rack/ui/RackCanvas';
 import { RackConfigurator } from '../../features/rack/ui/RackConfigurator';
+import { StatusBar } from '../../features/rack/ui/StatusBar';
 import { Button } from '../../shared/ui/Button';
 
 interface DragItem {
@@ -129,6 +130,7 @@ function Workspace() {
           )}
         </DragOverlay>
       </DndContext>
+      <StatusBar />
       <RackConfigurator />
       <EditorTour request={tourRequest} />
     </div>
