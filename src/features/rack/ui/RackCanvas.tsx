@@ -10,6 +10,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type PointerEvent,
   type WheelEvent,
 } from 'react';
@@ -28,6 +29,10 @@ import {
 } from '../../../shared/constants/rack-geometry';
 import { cn } from '../../../shared/lib/cn';
 import { Button } from '../../../shared/ui/Button';
+import { Chip } from '../../../shared/ui/Chip';
+import { Eyebrow } from '../../../shared/ui/Eyebrow';
+import { Kbd } from '../../../shared/ui/Kbd';
+import { Tooltip } from '../../../shared/ui/Tooltip';
 import { RearRackSvg } from '../../patchbay/ui/RearRackSvg';
 import { useRackStore } from '../model/use-rack-store';
 
@@ -40,65 +45,146 @@ interface RackCanvasProps {
   draggedItem: DraggedItem | null;
 }
 
+// ─────────────────────────────────────────────────────────────
+// Chassis chrome — 19" rack with ears, screws, U-indices.
+// Drawn in SVG so it scales with the camera transform; matches the
+// design-canvas chassis (gradient body, recessed inner cavity).
+// ─────────────────────────────────────────────────────────────
 function RackFrame({ rackSize, geometry }: { rackSize: number; geometry: RackGeometry }) {
   const { UNIT_HEIGHT, PANEL_WIDTH, PANEL_X, RACK_TOP, RACK_WIDTH, RACK_X } = geometry;
-  const height = rackSize * UNIT_HEIGHT;
+  const innerH = rackSize * UNIT_HEIGHT;
   const numberFontSize = Math.max(8, Math.round(UNIT_HEIGHT * 0.22));
   const numberX = Math.max(8, RACK_X - 22);
+  const earWidth = (PANEL_X - RACK_X) - 2;
+  const innerY = RACK_TOP;
+  const screwR = Math.min(4, numberFontSize * 0.55);
+
   return (
     <>
       <defs>
-        <pattern height="5" id="empty-slot" patternUnits="userSpaceOnUse" width="5">
-          <path d="M 0 5 L 5 0" stroke="#282c32" strokeWidth="1" />
-        </pattern>
-        <linearGradient id="rail" x2="1">
-          <stop stopColor="#111316" />
-          <stop offset="0.5" stopColor="#444950" />
-          <stop offset="1" stopColor="#17191d" />
+        <linearGradient id="chassisGradient" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0" stopColor="#1A1B1D" />
+          <stop offset="1" stopColor="#141517" />
         </linearGradient>
+        <radialGradient id="screwGradient">
+          <stop offset="0.1" stopColor="#4a4d52" />
+          <stop offset="0.7" stopColor="#1c1d1f" />
+        </radialGradient>
+        <pattern height={UNIT_HEIGHT} id="u-guide" patternUnits="userSpaceOnUse" width={PANEL_WIDTH}>
+          <line stroke="#1A1B1D" strokeWidth="1" x1="0" x2={PANEL_WIDTH} y1="0" y2="0" />
+          <line
+            stroke="#15171A"
+            strokeDasharray="2 5"
+            x1="0"
+            x2={PANEL_WIDTH}
+            y1={UNIT_HEIGHT / 2}
+            y2={UNIT_HEIGHT / 2}
+          />
+        </pattern>
       </defs>
-      <rect fill="#0e1012" height={height + 12} rx="3" width={RACK_WIDTH} x={RACK_X} y={2} />
-      <rect fill="url(#rail)" height={height} width="21" x={RACK_X + 7} y={RACK_TOP} />
+
+      {/* outer chassis */}
       <rect
-        fill="url(#rail)"
-        height={height}
-        width="21"
-        x={RACK_X + RACK_WIDTH - 28}
-        y={RACK_TOP}
+        fill="url(#chassisGradient)"
+        height={innerH + 28}
+        rx="6"
+        stroke="#2A2C2F"
+        width={RACK_WIDTH}
+        x={RACK_X}
+        y={innerY - 14}
       />
+
+      {/* left mounting ear */}
+      <rect
+        fill="#0E0F11"
+        height={innerH}
+        rx="2"
+        stroke="#2A2C2F"
+        width={earWidth}
+        x={RACK_X + 1}
+        y={innerY}
+      />
+      {[innerY + 10, innerY + innerH - 10].map((cy) => (
+        <g key={`L${cy}`}>
+          <circle
+            cx={RACK_X + earWidth / 2 + 1}
+            cy={cy}
+            fill="url(#screwGradient)"
+            r={screwR}
+            stroke="#050608"
+            strokeWidth="0.5"
+          />
+          <line
+            stroke="#2a2c2f"
+            strokeWidth="0.6"
+            transform={`rotate(45 ${RACK_X + earWidth / 2 + 1} ${cy})`}
+            x1={RACK_X + earWidth / 2 + 1 - screwR + 0.6}
+            x2={RACK_X + earWidth / 2 + 1 + screwR - 0.6}
+            y1={cy}
+            y2={cy}
+          />
+        </g>
+      ))}
+
+      {/* right mounting ear */}
+      <rect
+        fill="#0E0F11"
+        height={innerH}
+        rx="2"
+        stroke="#2A2C2F"
+        width={earWidth}
+        x={RACK_X + RACK_WIDTH - earWidth - 1}
+        y={innerY}
+      />
+      {[innerY + 10, innerY + innerH - 10].map((cy) => (
+        <g key={`R${cy}`}>
+          <circle
+            cx={RACK_X + RACK_WIDTH - earWidth / 2 - 1}
+            cy={cy}
+            fill="url(#screwGradient)"
+            r={screwR}
+            stroke="#050608"
+            strokeWidth="0.5"
+          />
+          <line
+            stroke="#2a2c2f"
+            strokeWidth="0.6"
+            transform={`rotate(45 ${RACK_X + RACK_WIDTH - earWidth / 2 - 1} ${cy})`}
+            x1={RACK_X + RACK_WIDTH - earWidth / 2 - 1 - screwR + 0.6}
+            x2={RACK_X + RACK_WIDTH - earWidth / 2 - 1 + screwR - 0.6}
+            y1={cy}
+            y2={cy}
+          />
+        </g>
+      ))}
+
+      {/* inner cavity (recessed) */}
+      <rect fill="#0E0F11" height={innerH} width={PANEL_WIDTH} x={PANEL_X} y={innerY} />
+      <rect
+        fill="url(#u-guide)"
+        height={innerH}
+        opacity="0.6"
+        pointerEvents="none"
+        width={PANEL_WIDTH}
+        x={PANEL_X}
+        y={innerY}
+      />
+
+      {/* U-index column (to the left of the ear) */}
       {Array.from({ length: rackSize }, (_, index) => {
-        const y = RACK_TOP + index * UNIT_HEIGHT;
+        const y = innerY + index * UNIT_HEIGHT;
         return (
-          <g key={index}>
-            <text
-              fill="#727986"
-              fontFamily="IBM Plex Mono, monospace"
-              fontSize={numberFontSize}
-              x={numberX}
-              y={y + UNIT_HEIGHT / 2 + numberFontSize / 3}
-            >
-              {index + 1}U
-            </text>
-            <rect
-              fill="url(#empty-slot)"
-              height={UNIT_HEIGHT - 1}
-              stroke="#2c3036"
-              strokeDasharray="3 3"
-              width={PANEL_WIDTH}
-              x={PANEL_X}
-              y={y}
-            />
-            {[RACK_X + 17, RACK_X + RACK_WIDTH - 17].map((x) => (
-              <circle
-                cx={x}
-                cy={y + UNIT_HEIGHT / 2}
-                fill="#0c0e10"
-                key={x}
-                r="4"
-                stroke="#737981"
-              />
-            ))}
-          </g>
+          <text
+            fill="#5D636C"
+            fontFamily="IBM Plex Mono, monospace"
+            fontSize={numberFontSize}
+            key={index}
+            textAnchor="end"
+            x={numberX}
+            y={y + UNIT_HEIGHT / 2 + numberFontSize / 3}
+          >
+            {String(rackSize - index).padStart(2, '0')}
+          </text>
         );
       })}
     </>
@@ -119,44 +205,75 @@ function DropSlot({ index, draggedItem }: { index: number; draggedItem: DraggedI
   const swapping = Boolean(moveResolution?.swap);
   const unit = FRONT_GEOMETRY.UNIT_HEIGHT;
   const height = isOver && draggedItem ? draggedItem.device.rackUnits * unit : unit;
-  let status = 'NO SPACE';
-  if (swapping) status = 'SWAP';
-  else if (valid && draggedItem) status = `PLACE ${draggedItem.device.rackUnits}U`;
+  let statusLabel = 'NO SPACE';
+  if (swapping) statusLabel = 'SWAP';
+  else if (valid && draggedItem) statusLabel = `PLACE ${draggedItem.device.rackUnits}U`;
+
+  const baseClasses =
+    'absolute pointer-events-auto transition-colors duration-150 ease-standard';
+  let stateClasses = '';
+  if (isOver && draggedItem) {
+    stateClasses = valid
+      ? swapping
+        ? 'border border-warning bg-warning-soft'
+        : 'border border-accent bg-accent-soft animate-pulse'
+      : 'border border-danger bg-danger-soft';
+  }
+
   return (
     <div
-      className={cn(
-        'drop-slot',
-        isOver && (valid ? 'is-valid' : 'is-invalid'),
-        isOver && swapping && 'is-swap',
-      )}
+      className={cn(baseClasses, stateClasses)}
       ref={setNodeRef}
       style={{
         height,
         left: FRONT_GEOMETRY.PANEL_X,
         top: FRONT_GEOMETRY.RACK_TOP + index * unit,
         width: FRONT_GEOMETRY.PANEL_WIDTH,
+        borderRadius: 2,
       }}
     >
-      {isOver && draggedItem && <span>{status}</span>}
+      {isOver && draggedItem ? (
+        <span
+          className={cn(
+            'absolute right-2 top-1/2 -translate-y-1/2 rounded-pill px-2 py-0.5',
+            'font-mono text-10 tracking-[0.12em]',
+            valid
+              ? swapping
+                ? 'bg-warning text-bg'
+                : 'bg-accent text-accent-text'
+              : 'bg-danger text-copy',
+          )}
+        >
+          {statusLabel}
+        </span>
+      ) : null}
     </div>
   );
 }
 
 function SortableDevice({ instance }: { instance: InstalledDevice }) {
   const selectDevice = useRackStore((state) => state.selectDevice);
+  const selectedDeviceId = useRackStore((state) => state.selectedDeviceId);
   const device = getDeviceById(devices, instance.deviceId);
   const { setNodeRef, listeners, attributes, transform, transition, isDragging } = useSortable({
     id: `rack:${instance.instanceId}`,
     data: { kind: 'installed', instanceId: instance.instanceId },
   });
   if (!device) return null;
+  const isSelected = selectedDeviceId === instance.instanceId;
   return (
     <button
       aria-label={`Move or inspect ${device.name}`}
-      className={cn('installed-interaction', isDragging && 'is-dragging')}
+      className={cn(
+        'absolute installed-interaction rounded-xs focus-visible:outline-none',
+        isDragging && 'opacity-0',
+      )}
       onClick={() => selectDevice(instance.instanceId)}
       ref={setNodeRef}
       style={{
+        boxShadow: isSelected
+          ? '0 0 0 1px var(--accent), 0 0 28px -4px rgba(200,255,0,0.32)'
+          : undefined,
         height: device.rackUnits * FRONT_GEOMETRY.UNIT_HEIGHT,
         left: FRONT_GEOMETRY.PANEL_X,
         top: FRONT_GEOMETRY.RACK_TOP + instance.slot * FRONT_GEOMETRY.UNIT_HEIGHT,
@@ -174,7 +291,9 @@ function SortableDevice({ instance }: { instance: InstalledDevice }) {
 export const RackCanvas = forwardRef<HTMLDivElement, RackCanvasProps>(({ draggedItem }, ref) => {
   const rackSize = useRackStore((state) => state.rackSize);
   const installed = useRackStore((state) => state.installed);
+  const cables = useRackStore((state) => state.cables);
   const viewMode = useRackStore((state) => state.viewMode);
+  const activeCableStart = useRackStore((state) => state.activeCableStart);
   const [pointer, setPointer] = useState<{ x: number; y: number } | null>(null);
   const setHoveredPort = useRackStore((state) => state.setHoveredPort);
   const [scale, setScale] = useState(1);
@@ -200,8 +319,8 @@ export const RackCanvas = forwardRef<HTMLDivElement, RackCanvasProps>(({ dragged
     if (!bounds || bounds.width === 0 || bounds.height === 0) return;
     const fitted = Math.min(
       1.42,
-      (bounds.width - 40) / viewWidth,
-      (bounds.height - 40) / (height + 28),
+      (bounds.width - 80) / viewWidth,
+      (bounds.height - 80) / (height + 28),
     );
     setPan({ x: 0, y: 0 });
     setScale(clampScale(fitted));
@@ -254,9 +373,20 @@ export const RackCanvas = forwardRef<HTMLDivElement, RackCanvasProps>(({ dragged
     setIsPanning(false);
   };
 
+  // Dot-grid background — matches design canvas.
+  const viewportStyle: CSSProperties = {
+    backgroundColor: 'var(--bg)',
+    backgroundImage: 'radial-gradient(circle, #1A1B1D 1px, transparent 1px)',
+    backgroundSize: '24px 24px',
+    cursor: isPanning ? 'grabbing' : undefined,
+  };
+
   return (
     <div
-      className={cn('rack-viewport', isPanning && 'is-panning')}
+      className={cn(
+        'relative flex-1 min-h-0 overflow-hidden touch-none select-none',
+        isPanning && 'cursor-grabbing',
+      )}
       onContextMenu={(event) => event.preventDefault()}
       onPointerCancel={stopPanning}
       onPointerDown={onPointerDown}
@@ -264,62 +394,93 @@ export const RackCanvas = forwardRef<HTMLDivElement, RackCanvasProps>(({ dragged
       onPointerUp={stopPanning}
       onWheel={onWheel}
       ref={viewportRef}
+      style={viewportStyle}
     >
-      <div className="canvas-controls">
-        <Button
-          aria-label="Zoom out"
-          onClick={() => {
-            hasManualCamera.current = true;
-            setScale((value) => clampScale(value - 0.12));
-          }}
-          size="icon"
-          variant="secondary"
-        >
-          <ZoomOut size={16} />
-        </Button>
-        <Button
-          aria-label="Reset camera"
-          onClick={() => {
-            hasManualCamera.current = false;
-            fitView();
-          }}
-          size="icon"
-          variant="secondary"
-        >
-          <Focus size={16} />
-        </Button>
-        <Button
-          aria-label="Zoom in"
-          onClick={() => {
-            hasManualCamera.current = true;
-            setScale((value) => clampScale(value + 0.12));
-          }}
-          size="icon"
-          variant="secondary"
-        >
-          <ZoomIn size={16} />
-        </Button>
+      {/* Top-left chips */}
+      <div className="pointer-events-auto absolute left-3 top-3 z-10 flex items-center gap-2">
+        <Eyebrow>Canvas</Eyebrow>
+        <Chip active>{viewMode === 'front' ? 'FRONT' : 'REAR'} VIEW</Chip>
+        {activeCableStart ? (
+          <span
+            className={cn(
+              'inline-flex h-5.5 items-center gap-1.5 rounded-pill border border-accent px-2',
+              'font-mono text-11 text-accent',
+            )}
+          >
+            <span
+              className="inline-block h-1.5 w-1.5 rounded-pill bg-accent"
+              style={{ animation: 'pulse-ring 1.2s infinite' }}
+            />
+            Drawing cable
+          </span>
+        ) : null}
       </div>
+
+      {/* Top-right zoom toolbar */}
+      <div className="pointer-events-auto absolute right-3 top-3 z-10 flex items-center gap-1">
+        <Tooltip content="Zoom out">
+          <Button
+            aria-label="Zoom out"
+            onClick={() => {
+              hasManualCamera.current = true;
+              setScale((value) => clampScale(value - 0.12));
+            }}
+            size="icon"
+            variant="ghost"
+          >
+            <ZoomOut size={14} />
+          </Button>
+        </Tooltip>
+        <Chip>{Math.round(scale * 100)}%</Chip>
+        <Tooltip content="Zoom in">
+          <Button
+            aria-label="Zoom in"
+            onClick={() => {
+              hasManualCamera.current = true;
+              setScale((value) => clampScale(value + 0.12));
+            }}
+            size="icon"
+            variant="ghost"
+          >
+            <ZoomIn size={14} />
+          </Button>
+        </Tooltip>
+        <Tooltip content="Reset camera (Fit)">
+          <Button
+            aria-label="Reset camera"
+            onClick={() => {
+              hasManualCamera.current = false;
+              fitView();
+            }}
+            size="icon"
+            variant="ghost"
+          >
+            <Focus size={14} />
+          </Button>
+        </Tooltip>
+      </div>
+
+      {/* Camera */}
       <div
-        className="rack-camera"
-        style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})` }}
+        className="absolute left-1/2 top-1/2 origin-center"
+        style={{
+          transform: `translate(-50%, -50%) translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
+        }}
       >
-        <div className="rack-stage">
-          <p className="rack-stage__label">
+        <div className="flex flex-col items-center" style={{ perspective: 1600 }}>
+          <div className="mb-2 font-mono text-10 uppercase tracking-[0.14em] text-muted-2">
             {viewMode === 'front' ? 'FRONT PANEL' : 'REAR PATCHING'}
-          </p>
+          </div>
           <motion.div
             animate={{ rotateY: 0, opacity: 1 }}
-            className="rack-flip"
             initial={{ rotateY: viewMode === 'rear' ? -86 : 86, opacity: 0.35 }}
             key={viewMode}
             ref={ref}
-            style={{ height, width: viewWidth }}
-            transition={{ duration: 0.34, ease: 'easeOut' }}
+            style={{ height, transformStyle: 'preserve-3d', width: viewWidth }}
+            transition={{ duration: 0.48, ease: [0.3, 0, 0, 1] }}
           >
             <svg
               aria-label={`${rackSize}U rack ${viewMode} view`}
-              className="rack-svg"
               height={height}
               onPointerMove={(event) => {
                 const bounds = event.currentTarget.getBoundingClientRect();
@@ -329,6 +490,7 @@ export const RackCanvas = forwardRef<HTMLDivElement, RackCanvasProps>(({ dragged
                 });
               }}
               role="img"
+              style={{ display: 'block' }}
               viewBox={`0 0 ${viewWidth} ${height}`}
               width={viewWidth}
             >
@@ -352,8 +514,16 @@ export const RackCanvas = forwardRef<HTMLDivElement, RackCanvasProps>(({ dragged
                 <RearRackSvg onPortHover={setHoveredPort} pointer={pointer} />
               )}
             </svg>
-            {viewMode === 'front' && (
-              <div className={cn('rack-hit-layer', draggedItem && 'is-dragging')}>
+
+            {viewMode === 'front' ? (
+              <div
+                className={cn(
+                  'absolute inset-0',
+                  draggedItem && 'pointer-events-auto',
+                  !draggedItem && 'pointer-events-none',
+                )}
+                style={{ pointerEvents: draggedItem ? 'auto' : 'none' }}
+              >
                 {Array.from({ length: rackSize }, (_, index) => (
                   <DropSlot draggedItem={draggedItem} index={index} key={index} />
                 ))}
@@ -366,10 +536,71 @@ export const RackCanvas = forwardRef<HTMLDivElement, RackCanvasProps>(({ dragged
                   ))}
                 </SortableContext>
               </div>
-            )}
+            ) : null}
+
+            {/* Empty rack hint */}
+            {installed.length === 0 && !draggedItem ? (
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center"
+                style={{
+                  left: FRONT_GEOMETRY.PANEL_X,
+                  top: FRONT_GEOMETRY.RACK_TOP,
+                  width: FRONT_GEOMETRY.PANEL_WIDTH,
+                  height: rackSize * FRONT_GEOMETRY.UNIT_HEIGHT,
+                }}
+              >
+                <svg
+                  fill="none"
+                  height="40"
+                  style={{ marginBottom: 14 }}
+                  viewBox="0 0 56 40"
+                  width="56"
+                >
+                  <rect
+                    height="36"
+                    rx="2"
+                    stroke="var(--line-2)"
+                    strokeDasharray="3 4"
+                    strokeWidth="1"
+                    width="52"
+                    x="2"
+                    y="2"
+                  />
+                  <line stroke="var(--line-2)" strokeDasharray="2 3" x1="8" x2="48" y1="20" y2="20" />
+                  <circle cx="14" cy="14" fill="var(--accent)" r="2" />
+                  <circle cx="14" cy="26" fill="var(--accent)" opacity="0.4" r="2" />
+                </svg>
+                <Eyebrow>Empty rack</Eyebrow>
+                <div className="mt-1 text-14 font-medium text-copy-2">
+                  Drag a device from the library
+                </div>
+                <div className="mt-1 font-mono text-12 text-muted-2">
+                  or press <Kbd>⌘K</Kbd> to search
+                </div>
+              </div>
+            ) : null}
           </motion.div>
         </div>
       </div>
+
+      {/* Bottom hint bar */}
+      <div className="pointer-events-none absolute bottom-3 left-3 right-3 z-10 flex items-center justify-between">
+        <div className="flex items-center gap-1.5 font-mono text-11 text-muted-2">
+          <Kbd>V</Kbd>
+          <span>front</span>
+          <span className="mx-1">·</span>
+          <Kbd>R</Kbd>
+          <span>rear</span>
+          <span className="mx-1">·</span>
+          <Kbd>⌘Z</Kbd>
+          <span>undo</span>
+        </div>
+        <div className="font-mono text-11 text-muted-2">
+          {rackSize}U · {installed.length} devices · {cables.length} cables
+        </div>
+      </div>
+
     </div>
   );
 });
