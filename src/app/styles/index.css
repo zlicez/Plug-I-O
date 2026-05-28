@@ -1,25 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
-@import 'tailwindcss';
-
-:root {
-  --bg: #0f0f10;
-  --surface: #161719;
-  --surface-raised: #1d1f23;
-  --surface-control: #26292e;
-  --line: #34383f;
-  --line-strong: #4c525d;
-  --copy: #f0f1f2;
-  --muted: #9da4af;
-  --lime: #c8ff00;
-  --amber: #d4820a;
-  --indigo: #6366f1;
-  --danger: #e05454;
-  --info: #4093d6;
-  --radius: 6px;
-  --unit: 24px;
-  --font-ui: 'DM Sans', Arial, sans-serif;
-  --font-mono: 'IBM Plex Mono', monospace;
-}
+/* Design tokens, Tailwind v4 theme block, font imports and legacy aliases
+ * all live in tokens.css — keep it the FIRST import here so every later
+ * rule and every component can rely on the custom properties. */
+@import './tokens.css';
 
 * {
   box-sizing: border-box;

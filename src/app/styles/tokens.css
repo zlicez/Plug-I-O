@@ -1,0 +1,296 @@
+/* Plug-I/O design tokens — single source of truth for the app.
+ * Mirrors design_handoff_plug_io/design_canvas/src/tokens.css 1:1.
+ * Adds a Tailwind v4 @theme block so tokens become utility classes
+ * (bg-bg, bg-surface, text-copy, border-line-2, rounded-r-3, etc.).
+ *
+ * Also retains LEGACY aliases (--lime, --surface-raised, --surface-control,
+ * --amber, --radius, --font-ui, --font-mono, --unit) so the unmigrated CSS
+ * in index.css keeps rendering until each component is moved over.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  /* ─── color · neutrals ─── */
+  --color-bg: #0f0f10;
+  --color-bg-2: #131416;
+  --color-surface: #161719;
+  --color-surface-2: #1d1f23;
+  --color-control: #26292e;
+  --color-control-hover: #2d3137;
+  --color-line: #2a2e34;
+  --color-line-2: #34383f;
+  --color-line-strong: #4c525d;
+  --color-copy: #f0f1f2;
+  --color-copy-2: #c8ccd2;
+  --color-muted: #9da4af;
+  --color-muted-2: #6b7280;
+  --color-dim: #4b5159;
+
+  /* ─── color · accent (lime) ─── */
+  --color-accent: #c8ff00;
+  --color-accent-2: #b6e800;
+  --color-accent-soft: rgb(200 255 0 / 0.14);
+  --color-accent-ring: rgb(200 255 0 / 0.3);
+  --color-accent-text: #0f0f10;
+
+  /* ─── color · semantic ─── */
+  --color-positive: #4ade80;
+  --color-positive-soft: rgb(74 222 128 / 0.14);
+  --color-warning: #f2a93b;
+  --color-warning-soft: rgb(242 169 59 / 0.14);
+  --color-danger: #e05454;
+  --color-danger-soft: rgb(224 84 84 / 0.14);
+  --color-info: #4093d6;
+  --color-info-soft: rgb(64 147 214 / 0.14);
+
+  /* ─── color · protocol palette (11 protocols + bluetooth) ─── */
+  --color-p-analog: #e0a458;
+  --color-p-aes: #6ee7ff;
+  --color-p-spdif: #f2a93b;
+  --color-p-adat: #b58cff;
+  --color-p-dante: #6366f1;
+  --color-p-madi: #ff7ab6;
+  --color-p-midi: #4ade80;
+  --color-p-wclock: #9da4af;
+  --color-p-usb: #6ee7ff;
+  --color-p-thunderbolt: #b58cff;
+  --color-p-power: #e05454;
+  --color-p-bluetooth: #4093d6;
+
+  /* ─── radius (slightly odd, hand-set feel) ─── */
+  --radius-1: 3px;
+  --radius-2: 6px;
+  --radius-3: 8px;
+  --radius-4: 10px;
+  --radius-5: 14px;
+  --radius-pill: 9999px;
+
+  /* ─── spacing (4-based) ─── */
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-10: 40px;
+  --spacing-12: 48px;
+  --spacing-16: 64px;
+
+  /* ─── rack-specific spacings ─── */
+  --spacing-u: 38px;
+  --spacing-rack-w: 460px;
+  --spacing-ear: 32px;
+
+  /* ─── type ─── */
+  --font-sans: 'DM Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'JetBrains Mono', Menlo, Consolas, monospace;
+
+  --text-10: 10px;
+  --text-11: 11px;
+  --text-12: 12px;
+  --text-13: 13px;
+  --text-14: 14px;
+  --text-16: 16px;
+  --text-20: 20px;
+  --text-24: 24px;
+  --text-32: 32px;
+  --text-40: 40px;
+  --text-56: 56px;
+
+  /* ─── easing ─── */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(0.3, 0, 0, 1);
+  --ease-decelerated: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --ease-accelerated: cubic-bezier(0.3, 0, 0.8, 0.15);
+
+  /* ─── elevation (inner-glow + border, no drop shadow) ─── */
+  --shadow-elev-1: inset 0 1px 0 0 rgb(255 255 255 / 0.04), 0 1px 0 0 rgb(0 0 0 / 0.4);
+  --shadow-elev-2: inset 0 1px 0 0 rgb(255 255 255 / 0.06), 0 4px 16px -4px rgb(0 0 0 / 0.6);
+  --shadow-elev-3: inset 0 1px 0 0 rgb(255 255 255 / 0.08), 0 12px 40px -8px rgb(0 0 0 / 0.7);
+  --shadow-focus: 0 0 0 2px #0f0f10, 0 0 0 4px #c8ff00;
+}
+
+/* ─────────────────────────────────────────────────────────────
+ * CSS custom properties — accessible from inline style / any CSS,
+ * not only from Tailwind utilities. Mirrors @theme above plus
+ * motion-duration variables and legacy aliases.
+ * ───────────────────────────────────────────────────────────── */
+:root {
+  /* neutrals */
+  --bg: #0f0f10;
+  --bg-2: #131416;
+  --surface: #161719;
+  --surface-2: #1d1f23;
+  --control: #26292e;
+  --control-hover: #2d3137;
+  --line: #2a2e34;
+  --line-2: #34383f;
+  --line-strong: #4c525d;
+  --copy: #f0f1f2;
+  --copy-2: #c8ccd2;
+  --muted: #9da4af;
+  --muted-2: #6b7280;
+  --dim: #4b5159;
+
+  /* accent */
+  --accent: #c8ff00;
+  --accent-2: #b6e800;
+  --accent-soft: rgb(200 255 0 / 0.14);
+  --accent-ring: rgb(200 255 0 / 0.3);
+  --accent-text: #0f0f10;
+
+  /* semantic */
+  --positive: #4ade80;
+  --positive-soft: rgb(74 222 128 / 0.14);
+  --warning: #f2a93b;
+  --warning-soft: rgb(242 169 59 / 0.14);
+  --danger: #e05454;
+  --danger-soft: rgb(224 84 84 / 0.14);
+  --info: #4093d6;
+  --info-soft: rgb(64 147 214 / 0.14);
+
+  /* protocols */
+  --p-analog: #e0a458;
+  --p-aes: #6ee7ff;
+  --p-spdif: #f2a93b;
+  --p-adat: #b58cff;
+  --p-dante: #6366f1;
+  --p-madi: #ff7ab6;
+  --p-midi: #4ade80;
+  --p-wclock: #9da4af;
+  --p-usb: #6ee7ff;
+  --p-thunderbolt: #b58cff;
+  --p-power: #e05454;
+  --p-bluetooth: #4093d6;
+
+  /* radius */
+  --r-1: 3px;
+  --r-2: 6px;
+  --r-3: 8px;
+  --r-4: 10px;
+  --r-5: 14px;
+  --r-pill: 999px;
+
+  /* spacing */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-10: 40px;
+  --s-12: 48px;
+  --s-16: 64px;
+
+  /* rack */
+  --u-h: 38px;
+  --rack-w: 460px;
+  --ear-w: 32px;
+
+  /* fonts */
+  --font-sans: 'DM Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'JetBrains Mono', Menlo, Consolas, monospace;
+
+  /* motion — durations (Tailwind v4 doesn't expose --duration-* utilities natively, so we keep these for inline / authored CSS) */
+  --d-instant: 80ms;
+  --d-fast: 160ms;
+  --d-base: 240ms;
+  --d-slow: 400ms;
+  --d-deep: 600ms;
+
+  /* easings */
+  --e-standard: cubic-bezier(0.2, 0, 0, 1);
+  --e-emphasized: cubic-bezier(0.3, 0, 0, 1);
+  --e-decelerated: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --e-accelerated: cubic-bezier(0.3, 0, 0.8, 0.15);
+
+  /* elevation */
+  --elev-1: inset 0 1px 0 0 rgb(255 255 255 / 0.04), 0 1px 0 0 rgb(0 0 0 / 0.4);
+  --elev-2: inset 0 1px 0 0 rgb(255 255 255 / 0.06), 0 4px 16px -4px rgb(0 0 0 / 0.6);
+  --elev-3: inset 0 1px 0 0 rgb(255 255 255 / 0.08), 0 12px 40px -8px rgb(0 0 0 / 0.7);
+  --ring: 0 0 0 1px var(--line-2);
+  --ring-strong: 0 0 0 1px var(--line-strong);
+  --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+
+  /* ─── LEGACY ALIASES — kept until index.css is fully migrated.
+   * Do NOT use these in new code. */
+  --surface-raised: var(--surface-2);
+  --surface-control: var(--control);
+  --lime: var(--accent);
+  --amber: #d4820a; /* legacy device accent — different from --warning #F2A93B */
+  --indigo: var(--p-dante);
+  --radius: var(--r-2);
+  --unit: 24px; /* old 1U size; replaced gradually by --u-h (38px) */
+  --font-ui: var(--font-sans);
+}
+
+/* ─── reduced motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+.no-motion *,
+.no-motion *::before,
+.no-motion *::after {
+  animation-duration: 0.001ms !important;
+  transition-duration: 0.001ms !important;
+}
+
+/* ─── shared keyframes (cable + port animations) ─── */
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 var(--accent-ring);
+  }
+  100% {
+    box-shadow: 0 0 0 12px transparent;
+  }
+}
+@keyframes dash-march {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+@keyframes flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+@keyframes draw-on {
+  from {
+    stroke-dashoffset: 200;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes scale-in {
+  from {
+    transform: scale(0.96);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes skel {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
