@@ -1,0 +1,301 @@
+/* Plug-I/O design tokens — derived from DESIGN_BRIEF.md §6.1
+   Dark theme primary. Lime accent. Pro-audio engineering vibe.
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* ───────── neutrals (warm ink) ───────── */
+  --bg:            #0F0F10;
+  --bg-2:          #131416;
+  --surface:       #161719;
+  --surface-2:     #1D1F23;
+  --control:       #26292E;
+  --control-hover: #2D3137;
+  --line:          #2A2E34;
+  --line-2:        #34383F;
+  --line-strong:   #4C525D;
+  --copy:          #F0F1F2;
+  --copy-2:        #C8CCD2;
+  --muted:         #9DA4AF;
+  --muted-2:       #6B7280;
+  --dim:           #4B5159;
+
+  /* ───────── brand accent (lime) ───────── */
+  --accent:        #C8FF00;
+  --accent-2:      #B6E800;
+  --accent-soft:   rgba(200, 255, 0, 0.14);
+  --accent-ring:   rgba(200, 255, 0, 0.30);
+  --accent-text:   #0F0F10;
+
+  /* ───────── semantic ───────── */
+  --positive:      #4ADE80;
+  --positive-soft: rgba(74, 222, 128, 0.14);
+  --warning:       #F2A93B;
+  --warning-soft:  rgba(242, 169, 59, 0.14);
+  --danger:        #E05454;
+  --danger-soft:   rgba(224, 84, 84, 0.14);
+  --info:          #4093D6;
+  --info-soft:     rgba(64, 147, 214, 0.14);
+
+  /* ───────── protocol colors (cable + port code) ─────────
+     Each protocol gets a hue + a pattern (solid/dashed/dotted).
+     Colorblind safe via hue separation + pattern. */
+  --p-analog:      #E0A458;  /* warm amber */
+  --p-aes:         #6EE7FF;  /* cyan */
+  --p-spdif:       #F2A93B;  /* orange */
+  --p-adat:        #B58CFF;  /* lavender */
+  --p-dante:       #6366F1;  /* indigo */
+  --p-madi:        #FF7AB6;  /* magenta-pink */
+  --p-midi:        #4ADE80;  /* green */
+  --p-wclock:      #9DA4AF;  /* neutral grey (timing) */
+  --p-usb:         #6EE7FF;  /* cyan — digital data */
+  --p-thunderbolt: #B58CFF;  /* lavender */
+  --p-power:       #E05454;  /* red */
+  --p-bluetooth:   #4093D6;  /* blue */
+
+  /* ───────── radius (slightly odd, hand-set) ───────── */
+  --r-1: 3px;
+  --r-2: 6px;
+  --r-3: 8px;
+  --r-4: 10px;
+  --r-5: 14px;
+  --r-pill: 999px;
+
+  /* ───────── spacing ───────── */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-10: 40px;
+  --s-12: 48px;
+  --s-16: 64px;
+
+  /* ───────── type ───────── */
+  --font-sans: 'DM Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'JetBrains Mono', Menlo, Consolas, monospace;
+
+  /* ───────── motion ───────── */
+  --d-instant: 80ms;
+  --d-fast:    160ms;
+  --d-base:    240ms;
+  --d-slow:    400ms;
+  --d-deep:    600ms;
+
+  --e-standard:    cubic-bezier(0.2, 0, 0, 1);
+  --e-emphasized:  cubic-bezier(0.3, 0, 0, 1);
+  --e-decelerated: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --e-accelerated: cubic-bezier(0.3, 0, 0.8, 0.15);
+
+  /* ───────── elevation (inner-glow + border, no drop shadow) ───────── */
+  --elev-1: inset 0 1px 0 0 rgba(255,255,255,0.04), 0 1px 0 0 rgba(0,0,0,0.4);
+  --elev-2: inset 0 1px 0 0 rgba(255,255,255,0.06), 0 4px 16px -4px rgba(0,0,0,0.6);
+  --elev-3: inset 0 1px 0 0 rgba(255,255,255,0.08), 0 12px 40px -8px rgba(0,0,0,0.7);
+  --ring:   0 0 0 1px var(--line-2);
+  --ring-strong: 0 0 0 1px var(--line-strong);
+  --focus-ring:  0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+}
+
+/* ───────── base ───────── */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--copy);
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "ss01", "cv11";
+}
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.label-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+.label-key {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+button, input, select { font: inherit; color: inherit; }
+button { background: none; border: none; cursor: pointer; padding: 0; }
+
+/* Selection */
+::selection { background: var(--accent); color: var(--accent-text); }
+
+/* Custom scrollbar (subtle, audio-tool feel) */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: var(--r-pill); border: 2px solid var(--bg); }
+::-webkit-scrollbar-thumb:hover { background: var(--line-strong); }
+
+/* Focus ring */
+:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: var(--r-2); }
+
+/* ───────── atomic helpers ───────── */
+.surface { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-3); }
+.surface-2 { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-3); }
+.divider { height: 1px; background: var(--line); width: 100%; }
+.divider-v { width: 1px; background: var(--line); height: 100%; }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; gap: var(--s-2);
+  height: 32px; padding: 0 12px;
+  border-radius: var(--r-2);
+  background: var(--control);
+  color: var(--copy);
+  border: 1px solid var(--line-2);
+  font-weight: 500;
+  font-size: 13px;
+  transition: background var(--d-fast) var(--e-standard), border-color var(--d-fast) var(--e-standard), color var(--d-fast) var(--e-standard);
+  white-space: nowrap;
+}
+.btn:hover { background: var(--control-hover); border-color: var(--line-strong); }
+.btn:active { background: var(--surface-2); }
+.btn[disabled], .btn.is-disabled { opacity: 0.4; pointer-events: none; }
+
+.btn-primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+.btn-primary:hover { background: var(--accent-2); border-color: var(--accent-2); }
+
+.btn-ghost { background: transparent; border-color: transparent; color: var(--copy-2); }
+.btn-ghost:hover { background: var(--control); border-color: var(--line-2); color: var(--copy); }
+
+.btn-danger { background: var(--danger-soft); color: #FFB4B4; border-color: rgba(224,84,84,0.3); }
+.btn-danger:hover { background: rgba(224,84,84,0.22); }
+
+.btn-sm { height: 26px; padding: 0 10px; font-size: 12px; }
+.btn-lg { height: 40px; padding: 0 16px; font-size: 14px; }
+.btn-icon { padding: 0; width: 32px; justify-content: center; }
+.btn-icon.btn-sm { width: 26px; }
+
+/* Chip / tag */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 22px; padding: 0 8px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  border: 1px solid var(--line-2);
+  color: var(--copy-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+.chip.is-active { background: var(--accent-soft); border-color: var(--accent-ring); color: var(--accent); }
+.chip-close { width: 12px; height: 12px; color: var(--muted); cursor: pointer; }
+
+/* Badge / counter */
+.badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 18px; min-width: 18px; padding: 0 5px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2); color: var(--copy-2);
+  font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+  border: 1px solid var(--line);
+}
+.badge-accent { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-ring); }
+
+/* Kbd */
+.kbd {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 20px; height: 20px; padding: 0 6px;
+  border-radius: var(--r-1);
+  background: var(--surface-2);
+  border: 1px solid var(--line-2);
+  border-bottom-width: 2px;
+  color: var(--copy-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* Input */
+.input {
+  height: 32px; padding: 0 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-2);
+  color: var(--copy);
+  font-size: 13px;
+  width: 100%;
+  transition: border-color var(--d-fast) var(--e-standard);
+}
+.input::placeholder { color: var(--muted-2); }
+.input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+/* Tooltip */
+.tt {
+  position: absolute; z-index: 50;
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  color: var(--copy);
+  padding: 6px 8px;
+  border-radius: var(--r-2);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  box-shadow: var(--elev-3);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Toast */
+.toast {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--r-3);
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  box-shadow: var(--elev-3);
+  min-width: 320px; max-width: 460px;
+}
+.toast-info    { border-left: 3px solid var(--info); }
+.toast-success { border-left: 3px solid var(--positive); }
+.toast-warning { border-left: 3px solid var(--warning); }
+.toast-error   { border-left: 3px solid var(--danger); }
+
+/* Animations */
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0   var(--accent-ring); }
+  100% { box-shadow: 0 0 0 12px transparent; }
+}
+@keyframes dash {
+  to { stroke-dashoffset: -24; }
+}
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+@keyframes draw-on {
+  from { stroke-dashoffset: 200; }
+  to   { stroke-dashoffset: 0; }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+.no-motion *, .no-motion *::before, .no-motion *::after {
+  animation-duration: 0.001ms !important;
+  transition-duration: 0.001ms !important;
+}
+
+/* Grid pattern (empty rack U-slots) */
+.u-grid-bg {
+  background-image:
+    linear-gradient(0deg, var(--line) 1px, transparent 1px);
+  background-size: 100% 28px;
+}

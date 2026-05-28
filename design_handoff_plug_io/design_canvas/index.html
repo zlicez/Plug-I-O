@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Plug-I/O — Design</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="src/tokens.css">
+<style>
+  body { background: var(--bg); margin: 0; }
+  @keyframes skel { 0%,100% { opacity: 0.4; } 50% { opacity: 0.7; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="src/shared.jsx"></script>
+<script type="text/babel" src="src/editor-chrome.jsx"></script>
+<script type="text/babel" src="src/editor-canvas.jsx"></script>
+<script type="text/babel" src="src/canvas-foundations.jsx"></script>
+<script type="text/babel" src="src/canvas-components.jsx"></script>
+<script type="text/babel" src="src/canvas-mock-editor.jsx"></script>
+<script type="text/babel" src="src/canvas-screens-editor.jsx"></script>
+<script type="text/babel" src="src/canvas-screens-special.jsx"></script>
+
+<script type="text/babel">
+const STD_W = 1280;
+const STD_H = 760;
+
+function App() {
+  return (
+    <DesignCanvas>
+      <DCSection id="cover" title="Plug-I/O" subtitle="Design system + 25+ screens for the pro-audio rack builder · dark theme · lime accent · 1:1 to brief">
+        <DCArtboard id="hero" label="Hero · Identity" width={1280} height={520}>
+          <CoverArtboard/>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="foundations" title="01 · Foundations" subtitle="Color, typography, motion, port glyphs, cable rendering, protocol palette">
+        <DCArtboard id="colors"    label="Color tokens"                  width={1280} height={620}><ColorsArtboard/></DCArtboard>
+        <DCArtboard id="type"      label="Type scale"                    width={1280} height={680}><TypeArtboard/></DCArtboard>
+        <DCArtboard id="motion"    label="Motion tokens"                 width={1280} height={520}><MotionArtboard/></DCArtboard>
+        <DCArtboard id="protocols" label="Protocol palette · 11 values"  width={1280} height={680}><ProtocolArtboard/></DCArtboard>
+        <DCArtboard id="ports"     label="Connector glyphs · 26 types"   width={1280} height={720}><PortGlyphsArtboard/></DCArtboard>
+        <DCArtboard id="cables"    label="Cable rendering states"        width={1280} height={620}><CableStatesArtboard/></DCArtboard>
+      </DCSection>
+
+      <DCSection id="components" title="02 · Components" subtitle="Buttons, chips, inputs, badges, toasts, modals, device cards — all states">
+        <DCArtboard id="buttons" label="Buttons · 4 variants × 6 states + sizes" width={1280} height={520}><ButtonsArtboard/></DCArtboard>
+        <DCArtboard id="chips"   label="Chips · Badges · Keys"                   width={1280} height={580}><ChipsArtboard/></DCArtboard>
+        <DCArtboard id="inputs"  label="Inputs · Controls"                       width={1280} height={600}><InputsArtboard/></DCArtboard>
+        <DCArtboard id="toasts"  label="Toasts · Tooltips · Popovers"            width={1280} height={580}><ToastsArtboard/></DCArtboard>
+        <DCArtboard id="cards"   label="Device cards · Grid + List"              width={1280} height={620}><DeviceCardsArtboard/></DCArtboard>
+        <DCArtboard id="modals"  label="Modals · Confirm + Export"               width={1280} height={520}><ModalsArtboard/></DCArtboard>
+      </DCSection>
+
+      <DCSection id="editor" title="03 · Editor screens · 23 states" subtitle="Every state from brief §5.3">
+        <DCArtboard id="s1-empty"           label="01 · Empty rack + onboarding"       width={STD_W} height={STD_H}><ScreenEmptyEditor/></DCArtboard>
+        <DCArtboard id="s2-device-sel"      label="02 · Device selected (front)"       width={STD_W} height={STD_H}><ScreenDeviceSelected/></DCArtboard>
+        <DCArtboard id="s3-rear-idle"       label="03 · Rear view · idle"              width={STD_W} height={STD_H}><ScreenRearIdle/></DCArtboard>
+        <DCArtboard id="s4-cable-prog"      label="04 · Cable being drawn"             width={STD_W} height={STD_H}><ScreenCableInProgress/></DCArtboard>
+        <DCArtboard id="s5-cable-sel"       label="05 · Cable selected (route)"        width={STD_W} height={STD_H}><ScreenCableSelected/></DCArtboard>
+        <DCArtboard id="s6-invalid"         label="06 · Invalid patch + error toast"   width={STD_W} height={STD_H}><ScreenInvalidPatch/></DCArtboard>
+        <DCArtboard id="s7-drag-from-lib"   label="07 · Drag from library"             width={STD_W} height={STD_H}><ScreenDragInProgress/></DCArtboard>
+        <DCArtboard id="s8-drag-reorder"    label="08 · Drag reorder · swap warn"      width={STD_W} height={STD_H}><ScreenDragReorder/></DCArtboard>
+        <DCArtboard id="s9-search-empty"    label="09 · Library · empty search"        width={STD_W} height={STD_H}><ScreenLibraryEmptySearch/></DCArtboard>
+        <DCArtboard id="s10-filters"        label="10 · Library · filters active"      width={STD_W} height={STD_H}><ScreenLibraryFiltersActive/></DCArtboard>
+        <DCArtboard id="s11-list"           label="11 · Library · list view"           width={STD_W} height={STD_H}><ScreenLibraryList/></DCArtboard>
+        <DCArtboard id="s12-inspector-empty" label="12 · Inspector · empty"            width={STD_W} height={STD_H}><ScreenInspectorEmpty/></DCArtboard>
+        <DCArtboard id="s13-confirm-del"    label="13 · Confirm device delete"         width={STD_W} height={STD_H}><ScreenConfirmDelete/></DCArtboard>
+        <DCArtboard id="s14-clear-rack"     label="14 · Clear rack confirmation"       width={STD_W} height={STD_H}><ScreenClearRack/></DCArtboard>
+        <DCArtboard id="s15-save-toast"     label="15 · Save toast"                    width={STD_W} height={STD_H}><ScreenSaveToast/></DCArtboard>
+        <DCArtboard id="s16-export"         label="16 · Export menu"                   width={STD_W} height={STD_H}><ScreenExportMenu/></DCArtboard>
+        <DCArtboard id="s17-onboarding"     label="17 · Onboarding tour · 1 / 3"       width={STD_W} height={STD_H}><ScreenOnboardingTour/></DCArtboard>
+        <DCArtboard id="s18-loading"        label="18 · Loading skeleton"              width={STD_W} height={STD_H}><ScreenLoadingSkeleton/></DCArtboard>
+        <DCArtboard id="s19-malformed"      label="19 · Malformed-session recovery banner" width={STD_W} height={STD_H}><ScreenMalformedSession/></DCArtboard>
+        <DCArtboard id="s20-flip"           label="20 · Front ↔ Rear flip (mid-state)" width={STD_W} height={STD_H}><ScreenFlipMid/></DCArtboard>
+        <DCArtboard id="s21-undo"           label="21 · Undo stack history"            width={STD_W} height={STD_H}><ScreenUndoHistory/></DCArtboard>
+        <DCArtboard id="s22-flow"           label="22 · Signal-flow overlay"           width={STD_W} height={STD_H}><ScreenSignalFlow/></DCArtboard>
+        <DCArtboard id="s23-shortcuts"      label="23 · Shortcuts modal"               width={STD_W} height={STD_H}><ScreenShortcuts/></DCArtboard>
+      </DCSection>
+
+      <DCSection id="adaptive" title="04 · Adaptive" subtitle="Tablet — collapsed rail + slide-over inspector. Mobile — bottom-sheet library, full-canvas viewing.">
+        <DCArtboard id="tablet" label="Tablet · 1024×720" width={1024} height={720}><ScreenTablet/></DCArtboard>
+        <DCArtboard id="mobile" label="Mobile · 390×780" width={390}  height={780}><ScreenMobile/></DCArtboard>
+      </DCSection>
+
+      <DCSection id="special" title="05 · Beyond the editor" subtitle="Landing, configurator, compare view, share/read-only viewer, print spec-sheet">
+        <DCArtboard id="landing"      label="Landing · /"                          width={1280} height={760}><ScreenLanding/></DCArtboard>
+        <DCArtboard id="configurator" label="Rack-size configurator · /editor#new" width={1280} height={760}><ScreenConfigurator/></DCArtboard>
+        <DCArtboard id="compare"      label="Compare view · A vs B"                width={1280} height={760}><ScreenCompare/></DCArtboard>
+        <DCArtboard id="share"        label="Share / read-only viewer · /r/:id"    width={1280} height={760}><ScreenShareViewer/></DCArtboard>
+        <DCArtboard id="spec-sheet"   label="Print · A4 spec sheet"                width={880}  height={1180}><ScreenSpecSheet/></DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+function CoverArtboard() {
+  return (
+    <div style={{
+      height: '100%', position: 'relative', overflow: 'hidden',
+      background: 'radial-gradient(ellipse at 70% 30%, rgba(200,255,0,0.08), transparent 60%), var(--bg)',
+      borderRadius: 'var(--r-3)', border: '1px solid var(--line-2)',
+    }}>
+      <div style={{ padding: '60px 60px 0', display: 'flex', alignItems: 'flex-start', gap: 60 }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 26 }}>
+            <Logo size={40}/>
+            <div style={{ fontSize: 28, fontWeight: 600, letterSpacing: '-0.02em' }}>Plug-I/O</div>
+            <span className="chip mono" style={{ background: 'var(--accent-soft)', color: 'var(--accent)', borderColor: 'var(--accent-ring)' }}>v1.0 · design</span>
+          </div>
+          <h1 style={{ fontSize: 64, fontWeight: 600, lineHeight: 1.02, letterSpacing: '-0.03em', margin: '0 0 16px', maxWidth: 720 }}>
+            A complete redesign,<br/>
+            <span style={{ color: 'var(--accent)' }}>built to your brief.</span>
+          </h1>
+          <p style={{ fontSize: 16, color: 'var(--muted)', maxWidth: 640, lineHeight: 1.55, margin: 0 }}>
+            Pro-audio rack builder. Dark theme, lime accent, DM&nbsp;Sans + IBM&nbsp;Plex Mono. Five sections — foundations, components, 23 editor states, adaptive (tablet + mobile), and four bonus modes (landing, compare, share, print).
+          </p>
+          <div style={{ display: 'flex', gap: 14, marginTop: 32, fontSize: 12, color: 'var(--muted)' }} className="mono">
+            <Stat n="5" l="sections"/>
+            <Stat n="26" l="port glyphs"/>
+            <Stat n="11" l="protocols"/>
+            <Stat n="23" l="editor states"/>
+            <Stat n="5" l="extra screens"/>
+          </div>
+        </div>
+        <div style={{ width: 380, marginTop: 0 }}>
+          <div style={{ transform: 'perspective(1400px) rotateY(-14deg) rotateX(6deg)', filter: 'drop-shadow(0 30px 40px rgba(0,0,0,0.5))' }}>
+            <RackChassis units={8} width={380}>
+              <div style={{ position: 'relative', width: 380, height: 8 * U_HEIGHT }}>
+                {[
+                  { id:'lh1', deviceId:'pn-iface', slot:6 },
+                  { id:'lh2', deviceId:'rt-cnv8',  slot:5 },
+                  { id:'lh3', deviceId:'wt-x73a',  slot:4 },
+                  { id:'lh4', deviceId:'nv-comp2', slot:3 },
+                  { id:'lh5', deviceId:'mt-eq3',   slot:2 },
+                  { id:'lh6', deviceId:'pw-dist',  slot:0 },
+                ].map(p => {
+                  const d = DEVICES.find(dd => dd.id === p.deviceId);
+                  return <div key={p.id} style={{ position: 'absolute', left: 0, top: p.slot * U_HEIGHT }}>
+                    <DeviceFront device={d} width={380}/>
+                  </div>;
+                })}
+              </div>
+            </RackChassis>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Stat({ n, l }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, paddingRight: 18, borderRight: '1px solid var(--line)' }}>
+      <span style={{ fontSize: 22, fontWeight: 600, color: 'var(--copy)' }} className="mono">{n}</span>
+      <span style={{ fontSize: 10, color: 'var(--muted-2)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{l}</span>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

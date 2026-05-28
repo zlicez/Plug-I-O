@@ -1,0 +1,124 @@
+import type { Port, PortDirection, PortType } from '../../device/model/types';
+import type { CableValidation } from '../model/types';
+
+export const COMPATIBILITY_MATRIX: Record<PortType, PortType[]> = {
+  xlr_analog: ['xlr_analog', 'xlr_combo'],
+  xlr_digital_aes: ['xlr_digital_aes'],
+  jack_trs: ['jack_trs', 'jack_ts', 'xlr_combo'],
+  jack_ts: ['jack_ts', 'jack_trs', 'xlr_combo'],
+  rca: ['rca'],
+  rj45_dante: ['rj45_dante', 'ethercon', 'rj45_avb'],
+  rj45_avb: ['rj45_avb', 'ethercon', 'rj45_dante'],
+  bnc_wordclock: ['bnc_wordclock', 'coaxial_spdif'],
+  midi_din: ['midi_din'],
+  usb_a: ['usb_b', 'usb_c'],
+  usb_b: ['usb_a', 'usb_c'],
+  usb_c: ['usb_a', 'usb_b', 'usb_c'],
+  db25_dsub: ['db25_dsub'],
+  opticalToslink: ['opticalToslink'],
+  coaxial_spdif: ['coaxial_spdif', 'bnc_wordclock'],
+  ethercon: ['ethercon', 'rj45_dante', 'rj45_avb'],
+  rj45_ethernet: ['rj45_ethernet'],
+  bnc_madi: ['bnc_madi'],
+  optical_madi: ['optical_madi'],
+  speakon: ['speakon'],
+  powercon: ['powercon'],
+  iec_c13: ['iec_c13', 'nema_5_15'],
+  nema_5_15: ['nema_5_15', 'iec_c13'],
+  terminal_block: ['terminal_block'],
+  thunderbolt: ['thunderbolt'],
+  digilink: ['digilink'],
+  remote_link: ['remote_link'],
+  xlr_combo: ['xlr_analog', 'jack_trs', 'jack_ts', 'xlr_combo'],
+};
+
+function canSource(direction: PortDirection): boolean {
+  return ['out', 'send', 'thru', 'bidirectional'].includes(direction);
+}
+
+function canReceive(direction: PortDirection): boolean {
+  return ['in', 'return', 'bidirectional'].includes(direction);
+}
+
+function isLineLevelMismatch(source: Port, destination: Port): boolean {
+  return source.maxLevel === '+4dBu' && destination.maxLevel === '-10dBV';
+}
+
+/** Validates a patch connection without changing rack state. */
+export function validateConnection(source: Port, destination: Port): CableValidation {
+  const notices: CableValidation['notices'] = [];
+
+  if (!canSource(source.direction) || !canReceive(destination.direction)) {
+    return {
+      allowed: false,
+      notices: [{ level: 'error', message: 'Connect an output or send to an input or return.' }],
+    };
+  }
+
+  if (
+    (source.type === 'xlr_digital_aes' && destination.type === 'xlr_analog') ||
+    (source.type === 'xlr_analog' && destination.type === 'xlr_digital_aes')
+  ) {
+    return {
+      allowed: false,
+      notices: [{ level: 'error', message: 'AES/EBU cannot be connected to analog XLR.' }],
+    };
+  }
+
+  if (!COMPATIBILITY_MATRIX[source.type].includes(destination.type)) {
+    return {
+      allowed: false,
+      notices: [
+        {
+          level: 'error',
+          message: `Physical connector mismatch: ${source.type} cannot patch to ${destination.type}.`,
+        },
+      ],
+    };
+  }
+
+  if (
+    (source.protocol === 'spdif' && destination.protocol === 'wordclock') ||
+    (source.protocol === 'wordclock' && destination.protocol === 'spdif')
+  ) {
+    notices.push({ level: 'warning', message: 'S/PDIF and word clock use different signals.' });
+  }
+
+  if (
+    (source.protocol === 'dante' && destination.protocol === 'milan_avb') ||
+    (source.protocol === 'milan_avb' && destination.protocol === 'dante')
+  ) {
+    notices.push({
+      level: 'warning',
+      message: 'Dante and AVB need an audio-over-IP bridge for interoperability.',
+    });
+  }
+
+  if (source.impedance === 'Hi-Z' && destination.impedance === 'Lo-Z') {
+    notices.push({ level: 'warning', message: 'Hi-Z source is feeding a Lo-Z input.' });
+  }
+  if (isLineLevelMismatch(source, destination)) {
+    notices.push({ level: 'warning', message: '+4dBu output may overload a -10dBV input.' });
+  }
+  if (source.channels === 'mono' && destination.channels === 'stereo') {
+    notices.push({ level: 'warning', message: 'Mono source is connected to a stereo input.' });
+  }
+  if (source.direction === 'send' && destination.direction === 'return') {
+    notices.push({ level: 'info', message: 'Analog insert loop established.' });
+  }
+  if (source.direction === 'thru' && source.protocol === 'midi') {
+    notices.push({ level: 'info', message: 'MIDI THRU is forwarding the upstream signal.' });
+  }
+
+  return { allowed: true, notices };
+}
+
+export function cableColorForPort(port: Port): string {
+  if (port.protocol === 'analog' && port.type.startsWith('xlr')) return '#4388ff';
+  if (port.protocol === 'analog') return '#e68a21';
+  if (port.protocol === 'dante' || port.protocol === 'milan_avb') return '#41c984';
+  if (port.protocol === 'ethernet' || port.protocol === 'blu_link') return '#41c984';
+  if (port.protocol === 'midi') return '#a879ff';
+  if (port.protocol === 'power') return '#e7bf45';
+  return '#28c6de';
+}

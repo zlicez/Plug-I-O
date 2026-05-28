@@ -1,0 +1,28 @@
+node_modules
+dist
+.vite
+.vite.stdout.log
+.vite.stderr.log
+*.local
+coverage
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
