@@ -86,7 +86,7 @@ export function EditorHeader({ captureRef, onTour }: EditorHeaderProps) {
         </select>
       </label>
       <div aria-label="Panel side" className="view-toggle" data-tour="view-toggle" role="group">
-        {(['front', 'back'] as const).map((mode) => (
+        {(['front', 'rear'] as const).map((mode) => (
           <button
             aria-pressed={viewMode === mode}
             className={viewMode === mode ? 'active' : ''}

@@ -25,7 +25,7 @@ export function useEditorCommands() {
         redo();
       }
       if (!inField && event.key.toLowerCase() === 'f') {
-        setViewMode(viewMode === 'front' ? 'back' : 'front');
+        setViewMode(viewMode === 'front' ? 'rear' : 'front');
       }
       if (!inField && (event.key === 'Delete' || event.key === 'Backspace')) {
         if (selectedCable) deleteCable(selectedCable);

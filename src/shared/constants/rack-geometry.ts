@@ -25,9 +25,9 @@ export interface RackGeometry {
   RACEWAY: number;
 }
 
-/** Front view — compact, mimics the real 19" rack proportions (1U = 24px). */
+/** Front view — 19" rack proportions, design-system 1U = 38px. */
 export const FRONT_GEOMETRY: RackGeometry = {
-  UNIT_HEIGHT: 24,
+  UNIT_HEIGHT: 38,
   VIEW_WIDTH: 540,
   RACK_WIDTH: 480,
   PANEL_WIDTH: 424,

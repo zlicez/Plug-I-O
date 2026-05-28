@@ -55,7 +55,7 @@ export function PatchStatusBar({ hoveredEndpoint }: PatchStatusBarProps) {
     hoveredEndpoint?.instanceId !== activeCableStart.instanceId
       ? validateConnection(source.port, routingTarget.port).allowed
       : false;
-  const open = viewMode === 'back' && Boolean(selectedCable || activeCableStart || hovered);
+  const open = viewMode === 'rear' && Boolean(selectedCable || activeCableStart || hovered);
   let content: ReactNode = null;
 
   if (selectedCable && source && destination) {

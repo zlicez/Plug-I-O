@@ -185,7 +185,7 @@ export const RackCanvas = forwardRef<HTMLDivElement, RackCanvasProps>(({ dragged
   const viewportRef = useRef<HTMLDivElement>(null);
   const hasManualCamera = useRef(false);
   const panStart = useRef<{ clientX: number; clientY: number; x: number; y: number } | null>(null);
-  const geometry: RackGeometry = viewMode === 'back' ? REAR_GEOMETRY : FRONT_GEOMETRY;
+  const geometry: RackGeometry = viewMode === 'rear' ? REAR_GEOMETRY : FRONT_GEOMETRY;
   const viewWidth = geometry.VIEW_WIDTH;
   const height = rackSize * geometry.UNIT_HEIGHT + 16;
   const installedWithDevices = useMemo(
@@ -313,7 +313,7 @@ export const RackCanvas = forwardRef<HTMLDivElement, RackCanvasProps>(({ dragged
           <motion.div
             animate={{ rotateY: 0, opacity: 1 }}
             className="rack-flip"
-            initial={{ rotateY: viewMode === 'back' ? -86 : 86, opacity: 0.35 }}
+            initial={{ rotateY: viewMode === 'rear' ? -86 : 86, opacity: 0.35 }}
             key={viewMode}
             ref={ref}
             style={{ height, width: viewWidth }}
@@ -350,7 +350,7 @@ export const RackCanvas = forwardRef<HTMLDivElement, RackCanvasProps>(({ dragged
                     />
                   </g>
                 ))}
-              {viewMode === 'back' && (
+              {viewMode === 'rear' && (
                 <RearRackSvg onPortHover={setHoveredPort} pointer={pointer} />
               )}
             </svg>

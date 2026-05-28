@@ -6,7 +6,7 @@ import type {
   RackSize,
 } from '../../../entities/device/model/types';
 
-export type ViewMode = 'front' | 'back';
+export type ViewMode = 'front' | 'rear';
 export type DevicePanelMode = 'grid' | 'list';
 export type DeviceSort = 'popularity' | 'name' | 'category';
 
