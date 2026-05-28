@@ -100,11 +100,17 @@
   --text-40: 40px;
   --text-56: 56px;
 
-  /* ─── easing ─── */
+  /* ─── easing — Tailwind v4 maps these to `ease-standard`, `ease-emphasized`, etc. ─── */
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --ease-emphasized: cubic-bezier(0.3, 0, 0, 1);
   --ease-decelerated: cubic-bezier(0.05, 0.7, 0.1, 1);
   --ease-accelerated: cubic-bezier(0.3, 0, 0.8, 0.15);
+
+  /* ─── transition duration — Tailwind v4 reads --default-transition-duration but
+       does NOT expose a custom namespace for `duration-*`. For named durations,
+       use Tailwind arbitrary classes (duration-[160ms]) or the --d-* custom
+       properties on :root via inline style. The variables below are convenience
+       for explicit @theme references only and do NOT become utility classes. ─── */
 
   /* ─── elevation (inner-glow + border, no drop shadow) ─── */
   --shadow-elev-1: inset 0 1px 0 0 rgb(255 255 255 / 0.04), 0 1px 0 0 rgb(0 0 0 / 0.4);
