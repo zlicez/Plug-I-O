@@ -384,7 +384,7 @@ export const RackCanvas = forwardRef<HTMLDivElement, RackCanvasProps>(({ dragged
   return (
     <div
       className={cn(
-        'relative flex-1 min-h-0 overflow-hidden touch-none select-none',
+        'relative flex-1 min-h-0 min-w-0 overflow-hidden touch-none select-none',
         isPanning && 'cursor-grabbing',
       )}
       onContextMenu={(event) => event.preventDefault()}

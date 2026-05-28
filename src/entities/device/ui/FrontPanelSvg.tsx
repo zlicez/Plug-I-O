@@ -267,15 +267,20 @@ function FrontPanelSvgComponent({
 export const FrontPanelSvg = memo(FrontPanelSvgComponent);
 
 function FrontPanelPreviewComponent({ device }: { device: Device }) {
+  // 1U preview keeps the design-system 38px pitch and the canonical
+  // 420×38 viewBox the front-panel renderer was authored against; the
+  // wrapper scales it down to whatever container width is available.
+  const h = device.rackUnits * 38;
   return (
     <svg
       aria-hidden
-      className="front-preview"
-      height={device.rackUnits * 24}
-      viewBox={`0 0 420 ${device.rackUnits * 24}`}
+      className="front-preview block"
+      height="100%"
+      preserveAspectRatio="xMidYMid meet"
+      viewBox={`0 0 420 ${h}`}
       width="100%"
     >
-      <FrontPanelSvg animateMeters={false} device={device} />
+      <FrontPanelSvg animateMeters={false} device={device} height={h} width={420} />
     </svg>
   );
 }

@@ -186,7 +186,7 @@ export function EditorHeader({ captureRef, onTour }: EditorHeaderProps) {
           onOpenChange={setRackSizeOpen}
           open={rackSizeOpen}
           trigger={
-            <Chip aria-label={`Rack size ${rackSize}U`} asButton>
+            <Chip aria-label={`Rack size ${rackSize}U, ${rackCm} cm`} asButton>
               {rackSize}U
               <ChevronDown size={10} />
             </Chip>
@@ -215,7 +215,6 @@ export function EditorHeader({ captureRef, onTour }: EditorHeaderProps) {
             ))}
           </div>
         </Popover>
-        <span className="font-mono text-11 text-muted-2">· {rackCm} cm</span>
       </div>
 
       {/* Front/Rear segmented toggle */}

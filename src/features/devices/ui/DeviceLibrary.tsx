@@ -282,12 +282,15 @@ function DeviceCard({
       )}
       onClick={handleClick}
       ref={setNodeRef}
+      title={`${device.name} — ${device.manufacturer}`}
       type="button"
     >
-      <div className="mb-2 aspect-[4/1.2] w-full overflow-hidden rounded-1 border border-line bg-bg">
+      <div className="mb-2 h-12 w-full overflow-hidden rounded-1 border border-line bg-bg">
         <FrontPanelPreview device={device} />
       </div>
-      <div className="mb-0.5 text-12 font-medium leading-tight text-copy">{device.name}</div>
+      <div className="mb-0.5 truncate text-12 font-medium leading-tight text-copy">
+        {device.name}
+      </div>
       <div className="flex items-center justify-between gap-1.5 font-mono text-10 text-muted-2">
         <span className="truncate">{device.manufacturer}</span>
         <Badge>{device.rackUnits}U</Badge>

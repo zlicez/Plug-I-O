@@ -60,7 +60,7 @@ export function DeviceInfoPanel() {
           animate={{ opacity: 1, x: 0 }}
           aria-label="Inspector"
           className={cn(
-            'device-inspector flex w-85 min-h-0 shrink-0 flex-col',
+            'relative flex h-full w-85 min-h-0 shrink-0 flex-col overflow-hidden',
             'border-l border-line bg-surface',
           )}
           exit={{ opacity: 0, x: 24 }}
